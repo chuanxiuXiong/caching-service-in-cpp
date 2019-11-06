@@ -1,10 +1,12 @@
 #include "service.h"
+#include <iostream>
 
-bool Service::SET(const std::string &clientName, const std::string &key, const std::string value, const bool NX = false, const bool XX = false)
+bool Service::SET(const std::string &clientName, const std::string &key, const std::string value, const bool NX, const bool XX)
 {
     mtx.lock();
     if (cache.find(key).empty())
     {
+        mtx.unlock();
         return false;
     }
     cache.upsert(key, value);
