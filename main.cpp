@@ -17,26 +17,56 @@ void processCommand(const std::string clientName, const std::string command,
 
     if (args[0] == "GET")
     {
+        if (args.size() < 2)
+        {
+            output.emplace_back("WRONG COMMAND!");
+            return;
+        }
         get(service, clientName, args, output);
     }
     else if (args[0] == "SET")
     {
+        if (args.size() < 3)
+        {
+            output.emplace_back("WRONG COMMAND!");
+            return;
+        }
         set(service, clientName, args, output);
     }
     else if (args[0] == "MGET")
     {
+        if (args.size() < 2)
+        {
+            output.emplace_back("WRONG COMMAND!");
+            return;
+        }
         mget(service, clientName, args, output);
     }
     else if (args[0] == "MSET")
     {
+        if (args.size() < 3 || args.size() % 2 == 0)
+        {
+            output.emplace_back("WRONG COMMAND!");
+            return;
+        }
         mset(service, clientName, args, output);
     }
     else if (args[0] == "INC")
     {
+        if (args.size() < 2)
+        {
+            output.emplace_back("WRONG COMMAND!");
+            return;
+        }
         incDec(service, clientName, args, output, true);
     }
     else if (args[0] == "DEC")
     {
+        if (args.size() < 2)
+        {
+            output.emplace_back("WRONG COMMAND!");
+            return;
+        }
         incDec(service, clientName, args, output, false);
     }
     else
@@ -51,13 +81,14 @@ void processCommand(const std::string clientName, const std::string command,
     {
         outputFile << "NULL" << std::endl;
     }
+
     for (auto &result : output)
     {
         if (result.empty())
         {
             result = "NULL";
         }
-        outputFile << result << std::endl;
+        outputFile << "> " << result << std::endl;
     }
     outputMutex.unlock();
 }
@@ -73,6 +104,12 @@ void run(const std::string clientName, const std::vector<std::string> commands,
     for (auto &command : commands)
     {
         std::vector<std::string> args = helpers::splitBySpace(command);
+        if (args.empty())
+        {
+            outputFile << clientName << " " << command << std::endl;
+            outputFile << "> WRONG COMMAND!" << std::endl;
+            continue;
+        }
         if (isTransaction)
         {
             if (args[0] == "EXEC")
@@ -94,7 +131,7 @@ void run(const std::string clientName, const std::vector<std::string> commands,
             {
                 outputMutex.try_lock();
                 outputFile << clientName << " " << command << std::endl;
-                outputFile << "Queued" << std::endl;
+                outputFile << "> Queued" << std::endl;
                 outputMutex.unlock();
                 queuedCommands.emplace_back(command);
                 queuedArgs.emplace_back(args);

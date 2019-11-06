@@ -4,11 +4,13 @@
 namespace inputs
 {
 const int delayBetweenRequests = 0;
+
 const std::string outputFileName = "log.txt";
 
 const int cacheSize = 5;
 
 const std::vector<std::vector<std::string>> commands{
+    {"c empty", ""},
     {"client 1", "SET key1 value1"},
     {"client 1", "GET key1"},
     {"client 2", "GET key2"},

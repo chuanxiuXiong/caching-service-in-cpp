@@ -9,6 +9,7 @@ helpers::splitBySpace(const std::string &s)
     int curr = 0;
     while (next < s.size())
     {
+
         next = s.find(' ', curr);
         ans.emplace_back(s.substr(curr, next - curr));
         curr = next + 1;
