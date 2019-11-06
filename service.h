@@ -4,6 +4,8 @@
 #include <vector>
 #include <mutex>
 
+// Service class - where the backend portion of the APIs live; serves as an access point to the cache.
+// The service contains a mutex to ensure atomic operations in some functions, such as when SET, MSET, etc.
 class Service
 {
 public:

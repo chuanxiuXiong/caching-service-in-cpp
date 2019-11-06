@@ -2,11 +2,13 @@
 
 bool Service::SET(const std::string &clientName, const std::string &key, const std::string value, const bool NX = false, const bool XX = false)
 {
+    mtx.lock();
     if (cache.find(key).empty())
     {
         return false;
     }
     cache.upsert(key, value);
+    mtx.unlock();
     return true;
 };
 
