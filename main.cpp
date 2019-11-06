@@ -21,7 +21,7 @@ void run(std::string clientName, std::vector<std::string> commands, Service &ser
         args = splitBySpace(command);
         if (args[0] == "GET")
         {
-            service.GET(args[1]);
+            service.GET(clientName, args[1]);
         }
         else if (args[0] == "SET")
         {

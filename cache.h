@@ -5,8 +5,8 @@ class Cache
 {
 public:
     Cache(int capacity);
-    std::string find(std::string &key);
-    bool upsert(std::string &key, std::string &value);
+    std::string find(const std::string &key);
+    bool upsert(const std::string &key, const std::string &value);
 
 private:
     int mCapacity;
