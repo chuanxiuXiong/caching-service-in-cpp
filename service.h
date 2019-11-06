@@ -11,13 +11,18 @@ class Service
 public:
     Service(int capacity) : cache(Cache(capacity)) {}
 
-    bool SET(const std::string &clientName, const std::string &key, const std::string value, const bool NX, const bool XX);
+    bool SET(const std::string &clientName,
+             const std::string &key, const std::string value, const bool NX, const bool XX);
 
     std::string GET(const std::string &clientName, const std::string &key);
 
-    std::vector<bool> MSET(const std::string &clientName, const std::vector<std::string> &keys, const std::vector<std::string> &values);
+    std::vector<bool> MSET(const std::string &clientName, const std::vector<std::string> &keys,
+                           const std::vector<std::string> &values);
 
-    std::vector<std::string> MGET(const std::string &clientName, const std::vector<std::string> &keys);
+    std::vector<std::string> MGET(const std::string &clientName,
+                                  const std::vector<std::string> &keys);
+
+    bool INCDEC(const std::string &clientName, const std::string &key, const bool isInc);
 
     void lockMtx();
 

@@ -47,3 +47,8 @@ void mset(Service &service, const std::string &clientName, const std::vector<std
     }
     service.unlockMtx();
 }
+
+void incDec(Service &service, const std::string &clientName, const std::vector<std::string> &args, std::vector<std::string> &output, const bool isInc)
+{
+    output.emplace_back(service.INCDEC(clientName, args[1], isInc) ? "true" : "false");
+}

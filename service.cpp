@@ -3,7 +3,7 @@
 
 void Service::lockMtx()
 {
-    mtx.lock();
+    mtx.try_lock();
 }
 
 void Service::unlockMtx()
@@ -38,7 +38,7 @@ std::vector<bool> Service::MSET(const std::string &clientName, const std::vector
 
     std::vector<bool> returnValues(keys.size());
 
-    mtx.lock();
+    lockMtx();
     for (int i = 0; i < keys.size(); ++i)
     {
         if (cache.find(keys[i]).empty())
@@ -51,17 +51,35 @@ std::vector<bool> Service::MSET(const std::string &clientName, const std::vector
             cache.upsert(keys[i], values[i]);
         }
     }
-    mtx.unlock();
+    unlockMtx();
     return returnValues;
 }
 
 std::vector<std::string> Service::MGET(const std::string &clientName, const std::vector<std::string> &keys)
 {
     std::vector<std::string> returnValues(keys.size());
-    mtx.lock();
+    lockMtx();
     for (int i = 0; i < keys.size(); ++i)
     {
         returnValues[i] = cache.find(keys[i]);
     }
-    mtx.unlock();
+    unlockMtx();
 }
+
+bool Service::INCDEC(const std::string &clientName, const std::string &key, const bool isInc)
+{
+    lockMtx();
+    int intValue;
+    try
+    {
+        intValue = std::stoi(cache.find(key));
+    }
+    catch (std::exception e)
+    {
+        unlockMtx();
+        return false;
+    }
+    cache.upsert(key, std::to_string(intValue + (isInc ? 1 : -1)));
+    unlockMtx();
+    return true;
+};
