@@ -12,8 +12,7 @@ class Service
 public:
     Service(int capacity) : cache(Cache(capacity)) {}
 
-    bool SET(const std::string &clientName,
-             const std::string &key, const std::string value, const bool NX, const bool XX);
+    void SET(const std::string &clientName, const std::string &key, const std::string &value);
 
     std::string GET(const std::string &clientName, const std::string &key);
 

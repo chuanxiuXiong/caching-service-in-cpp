@@ -11,17 +11,11 @@ void Service::unlockMtx()
     mtx.unlock();
 }
 
-bool Service::SET(const std::string &clientName, const std::string &key, const std::string value, const bool NX, const bool XX)
+void Service::SET(const std::string &clientName, const std::string &key, const std::string &value)
 {
     lockMtx();
-    if (cache.find(key).empty())
-    {
-        unlockMtx();
-        return false;
-    }
     cache.upsert(key, value);
     unlockMtx();
-    return true;
 };
 
 std::string Service::GET(const std::string &clientName, const std::string &key)
