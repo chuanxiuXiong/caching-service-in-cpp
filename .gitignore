@@ -20,6 +20,8 @@
 *.mod
 *.smod
 
+*.exe
+
 # Compiled Static libraries
 *.lai
 *.la
