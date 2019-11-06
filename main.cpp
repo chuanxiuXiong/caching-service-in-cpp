@@ -1,57 +1,85 @@
-#include "inputs.h"
-#include "helpers.h"
-#include "service.h"
-#include <unordered_map>
-#include <thread>
-#include <iostream>
+#include "main.h"
 
-void parseCommands(std::unordered_map<std::string, std::vector<std::string>> &clientCommands)
+void parseCommands(std::unordered_map<std::string,
+                                      std::vector<std::string>> &clientCommands)
 {
-    for (auto &i : inputs)
+    for (auto &i : inputs::commands)
     {
         clientCommands[i[0]].emplace_back(i[1]);
     }
 }
 
-void run(std::string clientName, std::vector<std::string> commands, Service &service)
+void run(const std::string clientName, const std::vector<std::string> commands,
+         Service &service, std::mutex &outputMutex, std::ofstream &outputFile)
 {
     std::vector<std::string> args;
     for (auto &command : commands)
     {
-        args = splitBySpace(command);
+        // get the arguments of the command
+        args = helpers::splitBySpace(command);
+
+        std::vector<std::string> output;
+
         if (args[0] == "GET")
         {
-            service.GET(clientName, args[1]);
+            get(service, clientName, args, output);
         }
         else if (args[0] == "SET")
         {
-            bool NX = false;
-            bool XX = false;
-            if (args.size() >= 4)
-            {
-                NX = (args[3] == "true") ? true : false;
-            }
-            if (args.size() == 5)
-            {
-                XX = (args[4] == "true") ? true : false;
-            }
-            service.SET(clientName, args[1], args[2], NX, XX);
+            set(service, clientName, args, output);
         }
+        else if (args[0] == "MGET")
+        {
+            mget(service, clientName, args, output);
+        }
+        else if (args[0] == "MSET")
+        {
+            mset(service, clientName, args, output);
+        }
+
+        // output the result to the log file
+        outputMutex.lock();
+        outputFile << clientName << " " << command << ":\n";
+        for (auto &result : output)
+        {
+            outputFile << result << std::endl;
+        }
+        outputMutex.unlock();
     }
 }
 
-int main(int argc)
+int main(int argc, char **argv)
 {
     std::unordered_map<std::string, std::vector<std::string>> clientCommands;
+
     std::vector<std::thread> clients;
 
-    Service service(cacheSize);
+    // lock for outputing the result
+    std::mutex outputMtx;
+
+    // log file
+    std::ofstream outputFile(inputs::outputFileName, std::ofstream::out);
+
+    Service service(inputs::cacheSize);
 
     parseCommands(clientCommands);
 
     for (auto &p : clientCommands)
     {
+        outputMtx.lock();
         std::cout << "Started connection with: " << p.first << "...\n";
-        clients.emplace_back(std::thread(run, p.first, p.second, service));
+        outputMtx.unlock();
+        clients.emplace_back(std::thread(run, std::ref(p.first),
+                                         std::ref(p.second), std::ref(service),
+                                         std::ref(outputMtx), std::ref(outputFile)));
+        // sleep for 100 ms to approximate the delay between the requests.
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    for (auto &c : clients)
+    {
+        c.join();
+    }
+    outputFile.close();
+    std::cout << "All requests have been handled." << std::endl;
+    return 0;
 }

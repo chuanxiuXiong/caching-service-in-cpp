@@ -1,16 +1,26 @@
 #include "service.h"
 #include <iostream>
 
-bool Service::SET(const std::string &clientName, const std::string &key, const std::string value, const bool NX, const bool XX)
+void Service::lockMtx()
 {
     mtx.lock();
+}
+
+void Service::unlockMtx()
+{
+    mtx.unlock();
+}
+
+bool Service::SET(const std::string &clientName, const std::string &key, const std::string value, const bool NX, const bool XX)
+{
+    lockMtx();
     if (cache.find(key).empty())
     {
-        mtx.unlock();
+        unlockMtx();
         return false;
     }
     cache.upsert(key, value);
-    mtx.unlock();
+    unlockMtx();
     return true;
 };
 

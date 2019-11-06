@@ -19,6 +19,10 @@ public:
 
     std::vector<std::string> MGET(const std::string &clientName, const std::vector<std::string> &keys);
 
+    void lockMtx();
+
+    void unlockMtx();
+
 private:
     Cache cache;
     std::mutex mtx;
