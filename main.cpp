@@ -9,42 +9,78 @@ void parseCommands(std::unordered_map<std::string,
     }
 }
 
+void processCommand(const std::string clientName, const std::string command,
+                    Service &service, std::mutex &outputMutex, std::ofstream &outputFile, std::vector<std::string> &args)
+{
+
+    // get the arguments of the command
+    std::vector<std::string> output;
+
+    if (args[0] == "GET")
+    {
+        get(service, clientName, args, output);
+    }
+    else if (args[0] == "SET")
+    {
+        set(service, clientName, args, output);
+    }
+    else if (args[0] == "MGET")
+    {
+        mget(service, clientName, args, output);
+    }
+    else if (args[0] == "MSET")
+    {
+        mset(service, clientName, args, output);
+    }
+
+    // output the result to the log file
+    outputMutex.lock();
+    outputFile << clientName << " " << command << ":\n";
+    for (auto &result : output)
+    {
+        outputFile << result << std::endl;
+    }
+    outputMutex.unlock();
+}
+
 void run(const std::string clientName, const std::vector<std::string> commands,
          Service &service, std::mutex &outputMutex, std::ofstream &outputFile)
 {
-    std::vector<std::string> args;
+
+    std::vector<std::string> queuedCommands;
+    std::vector<std::vector<std::string>> queuedArgs;
+    bool isTransaction = false;
+    int i;
     for (auto &command : commands)
     {
-        // get the arguments of the command
-        args = helpers::splitBySpace(command);
-
-        std::vector<std::string> output;
-
-        if (args[0] == "GET")
+        std::vector<std::string> args = helpers::splitBySpace(command);
+        if (isTransaction)
         {
-            get(service, clientName, args, output);
+            if (args[0] == "EXEC")
+            {
+                for (i = 0; i < queuedCommands.size(); ++i)
+                {
+                    processCommand(clientName, queuedCommands[i], service, outputMutex, outputFile, queuedArgs[i]);
+                }
+            }
+            else
+            {
+                queuedCommands.emplace_back(command);
+                queuedArgs.emplace_back(args);
+            }
         }
-        else if (args[0] == "SET")
+        else
         {
-            set(service, clientName, args, output);
+            if (args[0] == "MULTI")
+            {
+                isTransaction = true;
+                continue;
+            }
+            else
+            {
+                processCommand(clientName, command, service, outputMutex, outputFile, args);
+            }
         }
-        else if (args[0] == "MGET")
-        {
-            mget(service, clientName, args, output);
-        }
-        else if (args[0] == "MSET")
-        {
-            mset(service, clientName, args, output);
-        }
-
-        // output the result to the log file
-        outputMutex.lock();
-        outputFile << clientName << " " << command << ":\n";
-        for (auto &result : output)
-        {
-            outputFile << result << std::endl;
-        }
-        outputMutex.unlock();
     }
 }
 

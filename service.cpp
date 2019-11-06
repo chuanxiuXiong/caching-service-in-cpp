@@ -29,43 +29,6 @@ std::string Service::GET(const std::string &clientName, const std::string &key)
     return cache.find(key);
 }
 
-std::vector<bool> Service::MSET(const std::string &clientName, const std::vector<std::string> &keys, const std::vector<std::string> &values)
-{
-    if (keys.size() != values.size())
-    {
-        return {};
-    }
-
-    std::vector<bool> returnValues(keys.size());
-
-    lockMtx();
-    for (int i = 0; i < keys.size(); ++i)
-    {
-        if (cache.find(keys[i]).empty())
-        {
-            returnValues[i] = false;
-        }
-        else
-        {
-            returnValues[i] = true;
-            cache.upsert(keys[i], values[i]);
-        }
-    }
-    unlockMtx();
-    return returnValues;
-}
-
-std::vector<std::string> Service::MGET(const std::string &clientName, const std::vector<std::string> &keys)
-{
-    std::vector<std::string> returnValues(keys.size());
-    lockMtx();
-    for (int i = 0; i < keys.size(); ++i)
-    {
-        returnValues[i] = cache.find(keys[i]);
-    }
-    unlockMtx();
-}
-
 bool Service::INCDEC(const std::string &clientName, const std::string &key, const bool isInc)
 {
     lockMtx();

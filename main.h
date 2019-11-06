@@ -52,3 +52,4 @@ void incDec(Service &service, const std::string &clientName, const std::vector<s
 {
     output.emplace_back(service.INCDEC(clientName, args[1], isInc) ? "true" : "false");
 }
+
